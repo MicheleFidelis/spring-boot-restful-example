@@ -11,6 +11,7 @@ import javax.persistence.Entity;
 
 @Data
 @NoArgsConstructor
+@AllArgsConstructor
 @Entity
 public class Employee {
     @Id
@@ -19,4 +20,8 @@ public class Employee {
     private String name;
     private String role;
 
+    public Employee(String name, String role) {
+        this.name = name;
+        this.role = role;
+    }
 }

@@ -3,27 +3,45 @@ package com.restful.springboot.controller;
 import com.restful.springboot.exception.EmployeeNotFoundException;
 import com.restful.springboot.model.Employee;
 import com.restful.springboot.repository.EmployeeRepository;
+import com.restful.springboot.util.EmployeeModelAssembler;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.hateoas.CollectionModel;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
+
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 @RestController
 public class EmployeeController {
+    @Autowired
     private final EmployeeRepository repository;
 
-    EmployeeController(EmployeeRepository repository) {
+    @Autowired
+    private final EmployeeModelAssembler employeeModelAssembler;
+
+    public EmployeeController(EmployeeRepository repository, EmployeeModelAssembler employeeModelAssembler) {
         this.repository = repository;
+        this.employeeModelAssembler = employeeModelAssembler;
     }
 
     @GetMapping("/employees")
-    List<Employee> all() {
-        return repository.findAll();
+    public CollectionModel<EntityModel<Employee>> getAll() {
+        List<EntityModel<Employee>> employees = repository.findAll().stream()
+                .map(employeeModelAssembler::toModel)
+                .collect(Collectors.toList());
+
+        return CollectionModel.of(employees, linkTo(methodOn(EmployeeController.class).getAll()).withSelfRel());
     }
 
     @GetMapping("/employees/{id}")
-    public Employee getEmployee(@PathVariable Long id) {
-        return repository.findById(id)
+    public EntityModel<Employee> getEmployee(@PathVariable Long id) {
+        Employee employee = repository.findById(id)
                 .orElseThrow(() -> new EmployeeNotFoundException(id));
+        return  employeeModelAssembler.toModel(employee);
     }
 
     @PostMapping("/employees")
