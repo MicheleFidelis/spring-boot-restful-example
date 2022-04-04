@@ -7,6 +7,8 @@ import com.restful.springboot.util.EmployeeModelAssembler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.IanaLinkRelations;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -45,13 +47,15 @@ public class EmployeeController {
     }
 
     @PostMapping("/employees")
-    public Employee save(@RequestBody Employee newEmployee) {
-        return repository.save(newEmployee);
+    public ResponseEntity<?> save(@RequestBody Employee newEmployee) {
+        EntityModel<Employee> entityModel = employeeModelAssembler.toModel(repository.save(newEmployee));
+        return ResponseEntity.created(entityModel.getRequiredLink(IanaLinkRelations.SELF).toUri())
+                .body(entityModel);
     }
 
     @PutMapping("/employees/{id}")
-    public Employee update(@RequestBody Employee newEmployee, @PathVariable Long id) {
-        return repository.findById(id)
+    public ResponseEntity<?> update(@RequestBody Employee newEmployee, @PathVariable Long id) {
+        Employee updateEmployee = repository.findById(id)
                 .map(employee -> {
                     employee.setName(newEmployee.getName());
                     employee.setRole(newEmployee.getRole());
@@ -61,22 +65,32 @@ public class EmployeeController {
                     newEmployee.setId(id);
                     return repository.save(newEmployee);
                 });
+        EntityModel<Employee> entityModel = employeeModelAssembler.toModel(updateEmployee);
+        return ResponseEntity
+                .created(entityModel.getRequiredLink(IanaLinkRelations.SELF).toUri())
+                .body(entityModel);
+
     }
 
     @PatchMapping("/employees/{id}/{role}")
-    public Employee patchUpdate(@PathVariable Long id, @PathVariable String role) {
-        return repository.findById(id)
+    public ResponseEntity<?> patchUpdate(@PathVariable Long id, @PathVariable String role) {
+        Employee updateEmployee = repository.findById(id)
                 .map(employee -> {
                     employee.setRole(role);
                     return repository.save(employee);
                 })
                 .orElseGet(() -> {
-                    return repository.save(new Employee("teste", "role"));
+                    return repository.save(new Employee("FirstName", "LastName", "role"));
                 });
+        EntityModel<Employee> entityModel = employeeModelAssembler.toModel(updateEmployee);
+        return ResponseEntity
+                .created(entityModel.getRequiredLink(IanaLinkRelations.SELF).toUri())
+                .body(entityModel);
     }
 
     @DeleteMapping("/employees/{id}")
-    public void delete(@PathVariable Long id) {
+    public ResponseEntity<?> delete(@PathVariable Long id) {
         repository.deleteById(id);
+        return ResponseEntity.noContent().build();
     }
 }
