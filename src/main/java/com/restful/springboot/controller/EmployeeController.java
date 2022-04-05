@@ -4,7 +4,6 @@ import com.restful.springboot.exception.EmployeeNotFoundException;
 import com.restful.springboot.model.Employee;
 import com.restful.springboot.repository.EmployeeRepository;
 import com.restful.springboot.util.EmployeeModelAssembler;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.IanaLinkRelations;
@@ -19,10 +18,7 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 @RestController
 public class EmployeeController {
-    @Autowired
     private final EmployeeRepository repository;
-
-    @Autowired
     private final EmployeeModelAssembler employeeModelAssembler;
 
     public EmployeeController(EmployeeRepository repository, EmployeeModelAssembler employeeModelAssembler) {
